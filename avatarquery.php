@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Turn on for debugging. Will print possible errors on your page.
  */
@@ -7,8 +6,6 @@ ini_set("display_errors", 1);
 ini_set("track_errors", 1);
 ini_set("html_errors", 1);
 error_reporting(E_ALL);
-
-
 /**
  * Servers to query. Will show avatars of connected players on the right side.
  * Set status 'false' if you don't want playercounts on the left side.
@@ -30,7 +27,6 @@ $servers = array(
         'status' => true
     )
 );
-
 /**
  * Bungee server to ping and show information on the left side. Can be the same as one of the servers defined above.
  * Needed to get the favicon, motd, players online/max and version.
@@ -39,17 +35,14 @@ $bungee = array(
     'ip' => 'lobby.freecraft.eu',
     'port' => '25565'
 );
-
 /**
  * Settings
  */
 $SHOW_FAVICON = true; # Show the favicon? - true, false
-
 $TITLE = "FreeCraft";
 $TITLE_LEFT = "General Information";
 $TITLE_LEFT_DOWN = "Server Information";
 $TITLE_RIGHT = "Players";
-
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
  * No need to do something below here.
@@ -60,7 +53,6 @@ if (empty($_GET['server'])) {
 } else {
     $server = $_GET['server'];
 }
-
 if (empty($servers[$server]['ip'])) {
     $ip = reset($servers)['ip'];
     $port = reset($servers)['port'];
@@ -68,12 +60,9 @@ if (empty($servers[$server]['ip'])) {
     $ip = $servers[$server]['ip'];
     $port = $servers[$server]['port'];
 }
-
 $ping_url = "https://api.minetools.eu/ping/" . $bungee['ip'] . "/" . $bungee['port'];
 $query_url = "https://api.minetools.eu/query/" . $ip . "/" . $port;
-
 $ping = json_decode(file_get_contents($ping_url), true);
-
 //Put the collected player information into an array for later use.
 if (empty($ping['error'])) {
     $version = $ping['version']['name'];
@@ -82,7 +71,6 @@ if (empty($ping['error'])) {
     $motd = $ping['description'];
     $favicon = $ping['favicon'];
 }
-
 ?>
 
 <!DOCTYPE html>
@@ -110,29 +98,21 @@ if (empty($ping['error'])) {
     <script>
         $(document).ready(function () {
             // http://bootstrap-notify.remabledesigns.com/
-
             var ping_url = "<?php echo $ping_url; ?>";
             var query_url = "<?php echo $query_url; ?>";
-
             var servers = <?php echo json_encode($servers); ?>;
-
             players = [];
-
-
             refresh();
             query(false);
-
             setInterval(function () {
                 refresh();
                 updateServer();
                 query(true);
             }, 500);
-
-
             function display_notify(name, event, color) {
                 $.notify({
                     // options
-                    icon: '//cravatar.eu/helmhead/' + name + '/64',
+                    icon: '//www.minecraft-skin-viewer.net/3d.php?layers=true&aa=true&a=340&w=20&wt=10&abg=330&abd=40&ajg=340&ajd=20&ratio=5&format=png&login=' + name + '&headOnly=true&displayHairs=true&randomness=752',
                     message: name + ' ' + event
                 }, {
                     // settings
@@ -145,13 +125,11 @@ if (empty($ping['error'])) {
                     icon_type: 'img'
                 });
             }
-
             function refresh() {
                 $.get(ping_url, function (data) {
                     $(".playersonline").text(data['players']['online'] + '/' + data['players']['max'])
                 });
             }
-
             function updateServer() {
                 for (var srv in servers) {
                     if (servers.hasOwnProperty(srv)) {
@@ -159,18 +137,15 @@ if (empty($ping['error'])) {
                         if (server['status'] == false) {
                             return;
                         }
-
                         var url = "https://api.minetools.eu/ping/" + server['ip'] + "/" + server['port'];
                         pingServer(url, srv);
                     }
                 }
             }
-
             function pingServer(url, srv) {
                 $.get(url, function (data) {
                     //$("#status-" + srv).text(data['players']['online'] + '/' + data['players']['max']);
                     var status = data['error'];
-
                     if (!status) {
                         var online = data['players']['online'];
                         var max = data['players']['max'];
@@ -179,58 +154,46 @@ if (empty($ping['error'])) {
                     updateProgess(online, max, percent, srv, status);
                 });
             }
-
             function updateProgess(online, max, percent, srv, status) {
                 $('.progress-bar#' + srv).css('width', percent + '%').attr('aria-valuenow', percent).text(online);
-
                 if (status) {
                     $('td#' + srv).html('<i class="fa fa-times-circle text-danger"></i> Server is offline').css('width', '100px');
                 }
             }
-
             function query(notify) {
                 $.get(query_url, function (data) {
                     all = data['Playerlist'];
-
                     for (player in all) {
                         if ($.inArray(all[player], players) == "-1") {
                             console.log("Added " + all[player]);
                             players.push(all[player]);
-
                             $('#players').append(
                                 '<a data-placement="top" rel="tooltip" style="display: inline-block;" title="' + all[player] + '">'
                                 +
-                                '<img id="' + all[player] + '" src="//cravatar.eu/avatar/' + all[player] + '/50" style="margin-bottom: 5px; margin-right: 5px; border-radius: 3px; ">'
+                                '<img id="' + all[player] + '" src="//www.minecraft-skin-viewer.net/3d.php?layers=true&aa=true&a=340&w=20&wt=10&abg=330&abd=40&ajg=340&ajd=20&ratio=5&format=png&login=' + all[player] + '&headOnly=true&displayHairs=true&randomness=752" style="margin-bottom: 5px; margin-right: 5px; border-radius: 3px; ">'
                                 +
                                 '</a>'
                             );
-
                             if (notify) {
                                 display_notify(all[player], "joined", "success")
                             }
-
                         }
                     }
-
                     for (player in players) {
                         if ($.inArray(players[player], all) == "-1") {
                             console.log("Removed " + players[player]);
                             $('#' + players[player]).remove();
-
                             display_notify(players[player], "left", "danger");
-
                             for (var i = 0; i < players.length; i++) {
                                 if (players[i] === players[player]) {
                                     players.splice(i, 1);
                                     break;
                                 }
                             }
-
                         }
                     }
                 });
             }
-
         });
     </script>
 
